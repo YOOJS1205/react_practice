@@ -1,4 +1,5 @@
 import React, { useRef, useCallback, useState } from 'react';
+import produce from 'immer';
 import './App.css';
 
 export default function App() {
@@ -10,16 +11,14 @@ export default function App() {
   });
 
   // input 수정 함수
-  const onChange = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-      setForm({
-        ...form,
-        [name]: [value],
-      });
-    },
-    [form],
-  );
+  const onChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setForm(
+      produce((draft) => {
+        draft[name] = value;
+      }),
+    );
+  }, []);
 
   // form 등록 함수
   const onSubmit = useCallback(
@@ -31,10 +30,11 @@ export default function App() {
         username: form.username,
       };
 
-      setData({
-        ...data,
-        array: data.array.concat(info),
-      });
+      setData(
+        produce((draft) => {
+          draft.array.push(info);
+        }),
+      );
 
       setForm({
         name: '',
@@ -43,19 +43,18 @@ export default function App() {
 
       nextId.current++;
     },
-    [data, form.name, form.username],
+    [form.name, form.username],
   );
 
   // 항목 삭제 함수
-  const onRemove = useCallback(
-    (id) => {
-      setData({
-        ...data,
-        array: data.array.filter((info) => info.id !== id),
-      });
-    },
-    [data],
-  );
+  const onRemove = useCallback((id) => {
+    setData((draft) => {
+      draft.array.splice(
+        draft.array.findIndex((info) => info.id === id),
+        1,
+      );
+    });
+  }, []);
 
   return (
     <div>
